@@ -1,0 +1,22 @@
+sudo: required
+service:
+  - docker
+
+before_install:
+  - docker build -t parvindran/react-test -f ./client/Dockerfile.dev .
+
+script:
+  - docker run -e CI=true parvindran/react-test npm test
+
+after_success:
+  - docker build -t parvindran/multi-client ./client
+  - docker build -t parvindran/multi-nginx ./nginx
+  - docker build -t parvindran/multi-server ./server
+  - docker build -t parvindran/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push parvindran/multi-client
+  - docker push parvindran/multi-nginx
+  - docker push parvindran/multi-server
+  - docker push parvindran/multi-worker
